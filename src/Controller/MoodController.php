@@ -16,7 +16,16 @@ use Symfony\Component\Security\Core\Security;
  */
 class MoodController extends AbstractController
 {
-
+    /**
+     * @var Security
+     */
+    private $security;
+    
+    /**
+     * MoodController Constructor.
+     *
+     * @param Security $security
+     */
     public function __construct(Security $security) 
     {
         $this->security = $security;
@@ -25,7 +34,7 @@ class MoodController extends AbstractController
     /**
      * @Route("/", name="mood.index", methods={"GET"})
      */
-    public function index(MoodRepository $moodRepository): Response
+    public function index(): Response
     {
         return $this->render('mood/index.html.twig');
     }
@@ -38,9 +47,8 @@ class MoodController extends AbstractController
     {
         //Recherche d'abord le mood du jour, s'il a déjà été rempli aujourd'hui.
         $today = date('Y-m-d');
-        $user = $this->security->getUser();
-        $user = $user->getId();
-        $todayMood = $moodRepo->findByDate($today, $user);
+        $userId = $this->security->getUser()->getId();
+        $todayMood = $moodRepo->findByDate($today, $userId);
 
         //si le mood a bien été rempli
         if (empty($todayMood)) {
@@ -61,10 +69,10 @@ class MoodController extends AbstractController
      */
     public function edit($id, Request $request, Mood $mood): Response
     {
-        $form = $this->createForm(MoodType::class, $mood, array(
+        $form = $this->createForm(MoodType::class, $mood, [
             'action'=> $this->generateUrl('mood.edit', ['id' => $id]),
             'method' => 'GET'
-        ));
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
